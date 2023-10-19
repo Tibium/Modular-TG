@@ -1,0 +1,81 @@
+using UnityEngine;
+
+public class TerrainGenerator : MonoBehaviour
+{
+    //Setting up all variables for the perlin noise generator
+    public int width = 256;
+    public int height = 256;
+    public float scale = 20;
+    public float offsetZ = 0.0f;
+
+    //Setting up what material to use
+    public Material terrainMaterial;
+    public int octaves = 1;
+    public float persistence = 0.5f;
+    public float lacunarity = 2.0f;
+    public Vector2 offset = new Vector2(0, 0);
+    public float baseHeight = 1.0f;
+
+    // Variables for object spawning such as trees, rocks, etc
+    public GameObject[] objectPrefabs;
+    public int numberOfObjectsToSpawn = 100;
+    // limit for the number of objects can be changed/its not hardcoded
+    private void Start()
+    {
+        GenerateTerrain();
+        SpawnObjects();
+    }
+
+    public void GenerateTerrain()
+    {
+        TerrainData terrainData = new TerrainData();
+        terrainData.heightmapResolution = width + 1;
+        terrainData.size = new Vector3(width, 50, height);
+        terrainData.SetHeights(0, 0, GenerateHeights());
+
+        GameObject terrain = Terrain.CreateTerrainGameObject(terrainData);
+        terrain.transform.position = Vector3.zero;
+        terrain.GetComponent<Terrain>().materialTemplate = terrainMaterial;
+
+        Terrain oldTerrain = FindObjectOfType<Terrain>();
+        if(oldTerrain && oldTerrain.transform.position != Vector3.zero)
+        {
+            Destroy(oldTerrain.gameObject);
+        }
+    }
+
+    float[,] GenerateHeights()
+    {
+        float[,] heights = new float[width, height];
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                heights[x, y] = CalculateHeight(x, y);
+            }
+        }
+        return heights;
+    }
+
+    float CalculateHeight(int x, int y)
+    {
+        float xCoord = (float)x / width * scale;
+        float yCoord = (float)y / height * scale;
+
+        return Mathf.PerlinNoise(xCoord, yCoord + offsetZ);
+    }
+
+    void SpawnObjects()
+    {
+        Terrain terrain = FindObjectOfType<Terrain>();
+        for (int i = 0; i < numberOfObjectsToSpawn; i++)
+        {
+            float posX = Random.Range(0, width);
+            float posZ = Random.Range(0, height);
+            float posY = terrain.SampleHeight(new Vector3(posX, 0, posZ)) + terrain.transform.position.y;
+
+            GameObject objectToSpawn = objectPrefabs[Random.Range(0, objectPrefabs.Length)];
+            Instantiate(objectToSpawn, new Vector3(posX, posY, posZ), Quaternion.identity);
+        }
+    }
+}
