@@ -19,7 +19,7 @@ public class TerrainGenerator : MonoBehaviour
     // Variables for object spawning such as trees, rocks, etc
     public GameObject[] objectPrefabs;
     public int numberOfObjectsToSpawn = 100;
-    // limit for the number of objects can be changed/its not hardcoded
+
     private void Start()
     {
         GenerateTerrain();
